@@ -8,7 +8,7 @@ spec:
     metadata:
       labels:
         tier: client-web
-        name: java-init-biq
+        name: java-init
     spec:
       serviceAccountName: app-user-sa
       initContainers:
@@ -20,11 +20,18 @@ spec:
           - /opt/appd/
         image: appdynamics/java-agent:v4.5
         imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            cpu: 200m
+            memory: 100M
+          requests:
+            cpu: 100m
+            memory: 50M
         volumeMounts:
         - mountPath: /opt/appd
           name: appd-agent-repo
       containers:
-      - name: java-init-biq
+      - name: java-init
         image: java-service:v1
         imagePullPolicy: IfNotPresent
         envFrom:
@@ -52,38 +59,12 @@ spec:
             -Dappdynamics.agent.reuse.nodeName.prefix=$(TIER_NAME)
             -javaagent:/opt/appd/javaagent.jar " 
         volumeMounts:
-        - mountPath: /var/log
-          name: appd-volume
         - mountPath: /opt/appd
           name: appd-agent-repo
         ports:
         - containerPort: 8080
-      - name: analytics-agent
-        image: analytics-agent:v4.5
-        imagePullPolicy: IfNotPresent
-        envFrom:
-           - configMapRef:
-              name: apm-config
-        env:
-          - name: ACCOUNT_ACCESS_KEY
-            valueFrom:
-                secretKeyRef:
-                  key: appd-key
-                  name: appd-secret
-          - name: APPLICATION_NAME
-            value:
-          - name: TIER_NAME
-            value:
-        volumeMounts:
-        - mountPath: /applogs
-          name: appd-volume
-        ports:
-        - containerPort: 9090
-
       restartPolicy: Always
       volumes:
-        - name: appd-volume
-          emptyDir: {}
         - name: appd-agent-repo
           emptyDir: {}
 
