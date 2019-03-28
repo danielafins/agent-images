@@ -1,11 +1,22 @@
+FROM alpine AS builder
 
-FROM openjdk:8-jdk-alpine
+MAINTAINER mark.prichard@appdynamics.com
 
-RUN apk add --no-cache grep bc coreutils
+ARG APPD_AGENT_VERSION 
+ARG APPD_AGENT_SHA256
 
-RUN mkdir -p /opt/temp
+RUN apk --no-cache add unzip
 
-COPY AppDynamics.Agent.netstandard.dll /opt/temp/AppDynamics.Agent.netstandard.dll
-COPY libappdprofiler.so /opt/temp/libappdprofiler.so
+COPY AppDynamics-DotNetCore-${APPD_AGENT_VERSION}.zip /
+RUN if [ "x${APPD_AGENT_SHA256}" != "x" ]; then \ 
+ echo "${APPD_AGENT_SHA256} *AppDynamics-DotNetCore-${APPD_AGENT_VERSION}.zip" >> appd_checksum \
+    && sha256sum -c appd_checksum \
+    && rm appd_checksum \
+    && unzip -oq AppDynamics-DotNetCore-${APPD_AGENT_VERSION}.zip -d /tmp; \
+   else \
+     unzip -oq AppDynamics-DotNetCore-${APPD_AGENT_VERSION}.zip -d /tmp; \
+   fi
 
-CMD ["tail", "-f", "/dev/null"]
+FROM openjdk:8-jre-alpine
+RUN apk update && apk upgrade
+COPY --from=builder /tmp /opt/appdynamics
