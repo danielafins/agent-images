@@ -1,27 +1,27 @@
-FROM alpine AS builder
+
+FROM openjdk:8-jdk-alpine
 
 MAINTAINER mark.prichard@appdynamics.com
+
+RUN apk add --no-cache bash gawk sed grep bc coreutils
 
 ARG APPD_AGENT_VERSION 
 ARG APPD_AGENT_SHA256
 
-RUN apk --no-cache add unzip
+RUN mkdir -p /opt/appdynamics
 
 COPY analytics-agent-${APPD_AGENT_VERSION}.zip /
 RUN if [ "x${APPD_AGENT_SHA256}" != "x" ]; then \ 
  echo "${APPD_AGENT_SHA256} *analytics-agent-${APPD_AGENT_VERSION}.zip" >> appd_checksum \
     && sha256sum -c appd_checksum \
     && rm appd_checksum \
-    && unzip -oq analytics-agent-${APPD_AGENT_VERSION}.zip -d /tmp; \
+    && unzip -oq analytics-agent-${APPD_AGENT_VERSION}.zip -d /opt/appdynamics; \
    else \
-     unzip -oq analytics-agent-${APPD_AGENT_VERSION}.zip -d /tmp; \
+     unzip -oq analytics-agent-${APPD_AGENT_VERSION}.zip -d /opt/appdynamics; \
    fi
 
-FROM openjdk:8-jre-alpine
-RUN apk update && apk upgrade
-COPY --from=builder /tmp /opt/appdynamics
 
-ENV ANALYTICS_AGENT_HOME /opt/appdynamics/
+ENV ANALYTICS_AGENT_HOME /opt/appdynamics/analytics-agent
 
 COPY updateAnalyticsAgentConfig.sh /opt/appdynamics/updateAnalyticsAgentConfig.sh
 RUN chmod +x /opt/appdynamics/updateAnalyticsAgentConfig.sh
@@ -31,5 +31,4 @@ RUN chmod +x /opt/appdynamics/startup.sh
 
 EXPOSE 9090
 
-WORKDIR ${ANALYTICS_AGENT_HOME}
 CMD "/opt/appdynamics/startup.sh"
