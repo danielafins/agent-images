@@ -12,7 +12,7 @@ spec:
       serviceAccountName: appd-infra-sa
       containers:
       - name: appd-infra-agent
-        image: appdynamics/machine-agent:latest
+        image: appdynamics/machine-agent-analytics:4.5.10
         imagePullPolicy: IfNotPresent
         env:
         - name: APPDYNAMICS_AGENT_ACCOUNT_ACCESS_KEY

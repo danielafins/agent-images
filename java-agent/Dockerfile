@@ -16,7 +16,9 @@ RUN if [ "x${APPD_AGENT_SHA256}" != "x" ]; then \
    else \
      unzip -oq AppServerAgent-${APPD_AGENT_VERSION}.zip -d /tmp; \
    fi
+COPY tools.jar /tmp/tools.jar
 
 FROM openjdk:8-jre-alpine
 RUN apk update && apk upgrade
+
 COPY --from=builder /tmp /opt/appdynamics

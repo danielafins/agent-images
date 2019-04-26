@@ -29,6 +29,9 @@ RUN chmod +x /opt/appdynamics/updateAnalyticsAgentConfig.sh
 COPY startup.sh /opt/appdynamics/startup.sh
 RUN chmod +x /opt/appdynamics/startup.sh
 
+RUN chgrp -R 0 /opt && \
+    chmod -R g=u /opt
+
 EXPOSE 9090
 
 CMD "/opt/appdynamics/startup.sh"
